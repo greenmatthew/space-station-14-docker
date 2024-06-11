@@ -1,34 +1,26 @@
 .PHONY: build
 build:
-	docker build --build-arg GAME_SERVER_URL=https://cdn.centcomm.spacestation14.com/builds/wizards/builds/1dc1c8f64bf93c278fa437778cd110becdaae601/SS14.Server_linux-x64.zip -t space-station-14 .
+	docker-compose build
 
-.PHONY: tag
-tag:
-	docker tag space-station-14 space-station-14:latest
+.PHONY: up
+up:
+	docker-compose up --build
 
-.PHONY: run
-run:
-	docker run -d --name ss14-server space-station-14
+.PHONY: up-detached
+up-detached:
+	docker-compose up --build -d
 
-.PHONY: stop
-stop:
-	docker stop ss14-server
-
-.PHONY: restart
-restart:
-	docker restart ss14-server
-
-.PHONY: rm
-rm:
-	docker rm ss14-server
+.PHONY: down
+down:
+	docker-compose down
 
 .PHONY: logs
 logs:
-	docker logs ss14-server
+	docker-compose logs -f
 
-.PHONY: shell
+.PHONY: exec
 exec:
-	docker exec -it ss14-server /bin/sh
+	docker-compose exec ss14-server /bin/bash
 
 .PHONY: clean
 clean:
@@ -36,8 +28,8 @@ clean:
 
 .PHONY: debug-root
 debug-root:
-	docker run -it --user root --entrypoint /bin/bash space-station-14
+	docker-compose run --rm --user root --entrypoint /bin/bash ss14-server
 
 .PHONY: debug-user
 debug-user:
-	docker run -it --entrypoint /bin/bash space-station-14
+	docker-compose run --rm --entrypoint /bin/bash ss14-server

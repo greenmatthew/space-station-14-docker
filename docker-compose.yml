@@ -1,0 +1,20 @@
+version: '4.0'
+
+services:
+  ss14-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: space-station-14-server:latest
+    container_name: ss14-server
+    environment:
+      - UID=568
+      - GID=568
+      - SERVER_BUILDS_PAGE=https://central.spacestation14.io/builds/wizards/builds.html
+      - SERVER_BUILDS_PAGE_REGEX_PATTERN=<a href='https://cdn.centcomm.spacestation14.com/builds/wizards/builds/[a-z0-9]+/SS14.Server_linux-x64.zip'>Linux x64</a>
+    ports:
+      - "1212:1212"
+    # volumes:
+    #   - .:/home/server/app  # Mount the current directory to the container for live editing
+    # command: tail -f /dev/null  # Keep the container running
+    tty: true
