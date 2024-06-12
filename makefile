@@ -25,10 +25,10 @@ clean:
 	docker image prune -f
 
 tag:
-	docker tag space-station-14-server:latest greenmatthew/ss14-server:latest
+	docker tag space-station-14-server:latest greenmatthew/space-station-14-server:latest
 
 push:
-	docker push greenmatthew/ss14-server:latest
+	docker push greenmatthew/space-station-14-server:latest
 
 debug-root:
 	docker-compose run --rm --user root --entrypoint /bin/bash ss14-server

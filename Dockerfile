@@ -7,50 +7,32 @@ RUN apt-get update && \
 ENV UID=568
 ENV GID=568
 
+ENV APP_HOME=/app
+ENV APP_CONFIG_DIR=${APP_HOME}/conf
+ENV APP_CONFIG_TEMPLATE_FILE=${APP_HOME}/server_config.toml
+ENV APP_CONFIG_FILE=${APP_CONFIG_DIR}/server_config.toml
+
 ENV SERVER_BUILDS_PAGE="https://central.spacestation14.io/builds/wizards/builds.html"
 ENV SERVER_BUILDS_PAGE_REGEX_PATTERN="<a href='https://cdn.centcomm.spacestation14.com/builds/wizards/builds/[a-z0-9]+/SS14.Server_linux-x64.zip'>Linux x64</a>"
 
-# Create a new group and user
-RUN addgroup --gid $GID server && \
-    adduser --disabled-password --gecos '' --uid $UID --gid $GID server
-
 # Set up a working directory
-WORKDIR /home/server/app
+WORKDIR ${APP_HOME}
 
-# Download and install .NET 8.0 SDK
-RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && \
-    chmod +x ./dotnet-install.sh && \
-    ./dotnet-install.sh --channel 8.0 --version latest --install-dir /opt/dotnet && \
-    rm dotnet-install.sh
+RUN mkdir /opt/dotnet
 
-# Update the `root` PATH environment variable
-ENV DOTNET_ROOT="/opt/dotnet"
-ENV PATH="/opt/dotnet:/opt/dotnet/tools:$PATH"
+# Create a new group and user
+RUN addgroup --gid $GID apps && \
+    adduser --disabled-password --gecos '' --uid $UID --gid $GID apps
 
-# Download the HTML, extract the file URL, download the game server, and cleanup
-RUN GAME_SERVER_URL=$(curl -s "https://central.spacestation14.io/builds/wizards/builds.html" | \
-    grep -oP "<a href='https://cdn.centcomm.spacestation14.com/builds/wizards/builds/[a-z0-9]+/SS14.Server_linux-x64.zip'>Linux x64</a>" | \
-    sed "s|.*href='\(.*\)'.*|\1|") && \
-    echo "Extracted URL: $GAME_SERVER_URL" && \
-    wget ${GAME_SERVER_URL} -O game_server.zip && \
-    unzip game_server.zip && \
-    rm game_server.zip
+COPY entrypoint.sh /
+RUN chown -R apps:apps ${APP_HOME} /entrypoint.sh && \
+    chmod +x /entrypoint.sh
 
-# Remove unneeded files and packages to reduce Docker image size
-RUN apt-get remove -y wget curl unzip && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Switch to the apps user
+USER apps
 
-# Change the ownership of the /home/server/app directory to the server user
-RUN chown -R server:server /home/server/app && \
-    chmod +x /home/server/app/Robust.Server
+EXPOSE 1212/tcp
+EXPOSE 1212/udp
 
-# Switch to the server user
-USER server
-
-# Update the `server` PATH environment variable
-ENV PATH="/opt/dotnet:/opt/dotnet/tools:$PATH"
-
-# Update the CMD instruction to use the full path to the executable
-CMD ["/home/server/app/Robust.Server"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD [ "./Robust.Server", "--config-file", "${APP_CONFIG_FILE}" ]

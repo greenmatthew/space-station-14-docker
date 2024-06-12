@@ -13,5 +13,7 @@ services:
     ports:
       - "1212:1212/tcp"
       - "1212:1212/udp"
+    volumes:
+      - ./conf:/app/conf  # Mount the local ./conf directory to /app/conf in the container
     # command: tail -f /dev/null  # Keep the container running
     tty: true
